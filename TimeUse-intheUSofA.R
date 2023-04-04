@@ -1,0 +1,163 @@
+rm(list = ls())
+
+# PACKAGES ---------------------------------------------------------------------
+if (!require("pacman")) install.packages("pacman")
+packages <- c(
+  "ipumsr", # Required to load the IPUMS Data extract properly
+  "dplyr",
+  "tidyverse",
+  "haven",
+  "ggplot2",
+  "ggpubr",
+  "gt",
+  "gtExtras",
+  "kableExtra",
+  "RColorBrewer"
+)
+pacman::p_load(packages, character.only = TRUE)
+# -----------------------------------------------------------------------------
+
+
+# PATHS ----------------------------------------------------------------------- 
+if(Sys.info()["user"]=="lucaparisotto1") {
+  #maindir <- "/Users/lucaparisotto1/Desktop/Github-projects/TimeUse"
+  #datadir <- "/Users/lucaparisotto1/Desktop/Github-projects/TimeUse/Data"
+  #outdir <- "/Users/lucaparisotto1/Desktop/Github-projects/TimeUse/Output"
+  maindir <- "/Users/lucaparisotto1/Desktop/Dropbox/Projects - My research/USA - Time use"
+  datadir <- "/Users/lucaparisotto1/Desktop/Dropbox/Projects - My research/USA - Time use/Data ATUS"
+  outdir <- "//Users/lucaparisotto1/Desktop/Dropbox/Projects - My research/USA - Time use/Output"
+  user    <- "Luca-mac"
+} else if(Sys.info()["user"]=="new person") {
+  datadir <- "where?"
+  user    <- "who?"
+}
+# -----------------------------------------------------------------------------
+
+
+# LOAD IPUMS DATA -------------------------------------------------------------
+# This has to be done IPUMS style, so setwd() even if I don't like it 
+setwd(maindir)
+getwd()
+# load ddi and main data
+ddi <- read_ipums_ddi("Data/atus_00001.xml")
+df.raw <- read_ipums_micro(ddi)
+# -----------------------------------------------------------------------------
+
+
+
+
+
+
+# EXPLORE ---------------------------------------------------------------------
+## define a function to tabulate by year
+tab_freq.year <- function(d,v,ny) { 
+  tab <- d %>% 
+    select(YEAR,{{v}}) %>% 
+    group_by(YEAR,{{v}}) %>% 
+    filter({{v}}!=-8,{{v}}!=-9) %>%
+    count({{v}}) %>% 
+    mutate(
+      total=sum(.$n)
+    ) %>% 
+    spread(
+      .,{{v}},n
+    ) %>%
+    #   rename(., c("Male" = `1`,  "Female" = `2`)) %>%
+    select(-total)
+  print(tab , n=ny) 
+}
+## Frequencies by gender of the respondent
+# 1 male, 2 female
+tab_freq.year(df.raw,SEX,27)
+## Freq by marital status 
+# 1 in couple, 2 not in couple 
+tab_freq.year(df.raw,MARST,27)
+# -----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+# SAMPLE DEFITIONS ------------------------------------------------------------
+## make all var names lower case 
+colnames(df.raw) <- tolower(colnames(df.raw))
+## drop the million weights to get a more explorable dataset, can remove this 
+# later 
+df.raw.noweights <- df.raw %>%  select(-starts_with("rwt"))
+
+
+## What vars do we want to keep? 
+# technical admin vars
+admin <- c(
+  "year",
+  "caseid",
+  "hrhhid_cps8"
+)
+# geographics
+geographics <- c(
+  "statefip",
+  "metarea"
+)
+# demographics
+demographics <- c(
+  "age",
+  "sex",
+  "marst",
+  "educ",
+  "educyrs",
+  "hh_size",
+  #"hh_numownkids",
+  "hh_numkids",
+  "ageychild",
+  "famincome"
+)
+# employment 
+employment <- c(
+  "empstat",
+  "occ",
+  "occ2",
+  "ind",
+  "ind2",
+  "fullpart",
+  "uhrsworkt_cps8",
+  "earnweek_cps8",
+  "hrsworkt_cps8"
+)
+# partners' vars
+partner <- c(
+  "spage",
+  "spempstat",
+  "spusualhrs",
+  "spearnweek"
+)
+# activities 
+activities <- df.raw %>% 
+  select(starts_with(c("ACT_","SCC_"))) %>%
+  colnames(.) 
+
+## select the columns we want for the df
+df <- df.raw %>% 
+  select(
+    admin,
+    geographics,
+    demographics,
+    employment,
+    activities
+  )
+# -----------------------------------------------------------------------------
+
+
+
+
+
+# ANALYSIS --------------------------------------------------------------------
+## 
+
+
+# -----------------------------------------------------------------------------
+
+
